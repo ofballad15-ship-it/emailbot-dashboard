@@ -3,660 +3,751 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EmailBot Pro — Dashboard</title>
+<title>EmailBot Pro — Email Automation Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #0f172a; --surface: #1e293b; --border: #334155;
-  --text: #e2e8f0; --text-sub: #94a3b8; --text-muted: #64748b;
-  --accent: #38bdf8; --green: #22c55e; --red: #ef4444; --yellow: #eab308; --orange: #f97316; --purple: #a855f7;
-  --radius: 12px;
+  --bg: #0a0e1a; --surface: #111827; --surface2: #1a2236; --border: #1f2b3d;
+  --text: #f0f4f8; --text-sub: #94a3b8; --text-muted: #5a6577;
+  --accent: #3b82f6; --accent-hover: #2563eb; --accent-bg: rgba(59,130,246,0.1);
+  --green: #10b981; --green-bg: rgba(16,185,129,0.1);
+  --red: #ef4444; --red-bg: rgba(239,68,68,0.1);
+  --yellow: #f59e0b; --yellow-bg: rgba(245,158,11,0.1);
+  --orange: #f97316; --purple: #8b5cf6;
+  --radius: 12px; --shadow: 0 4px 24px rgba(0,0,0,0.4);
 }
-body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 240px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; z-index: 100; display: flex; flex-direction: column; }
-.logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); }
-.logo h2 { font-size: 20px; color: var(--accent); font-weight: 700; }
-.logo span { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-.nav { flex: 1; padding: 16px 0; }
-.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: var(--text-sub); cursor: pointer; transition: all 0.15s; font-size: 14px; border-left: 3px solid transparent; }
-.nav-item:hover { background: rgba(56,189,248,0.05); color: var(--text); }
-.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(56,189,248,0.08); }
-.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
-.nav-section { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; padding: 16px 20px 8px; }
-.main { margin-left: 240px; padding: 28px 32px; min-height: 100vh; }
-.page { display: none; animation: fadeIn 0.2s; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+button { font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+
+/* SIDEBAR */
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
+.sidebar-logo { padding: 20px; border-bottom: 1px solid var(--border); }
+.sidebar-logo h1 { font-size: 18px; color: var(--accent); font-weight: 700; letter-spacing: -0.5px; }
+.sidebar-logo span { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
+.sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+.nav-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; padding: 12px 16px 6px; }
+.nav-link { display: flex; align-items: center; gap: 10px; padding: 9px 16px; color: var(--text-sub); cursor: pointer; font-size: 13px; transition: all 0.12s; border-left: 2px solid transparent; }
+.nav-link:hover { background: var(--accent-bg); color: var(--text); }
+.nav-link.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-bg); }
+.nav-link svg { width: 16px; height: 16px; opacity: 0.7; }
+.nav-link.active svg { opacity: 1; }
+.sidebar-footer { padding: 12px 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); }
+
+/* MAIN */
+.main { margin-left: 220px; min-height: 100vh; }
+.topbar { display: flex; justify-content: space-between; align-items: center; padding: 16px 28px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 50; }
+.topbar h2 { font-size: 18px; font-weight: 600; }
+.topbar-actions { display: flex; gap: 10px; align-items: center; }
+.content { padding: 24px 28px; }
+
+/* PAGES */
+.page { display: none; animation: fadeIn 0.15s; }
 .page.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
-.header h1 { font-size: 26px; font-weight: 600; }
-.header .subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
-.btn { padding: 8px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* BUTTONS */
+.btn { padding: 8px 16px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.12s; }
 .btn-primary { background: var(--accent); color: #fff; }
-.btn-primary:hover { background: #0ea5e9; }
+.btn-primary:hover { background: var(--accent-hover); }
 .btn-success { background: var(--green); color: #fff; }
 .btn-danger { background: var(--red); color: #fff; }
-.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-sub); }
-.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
-.grid { display: grid; gap: 16px; margin-bottom: 24px; }
-.grid-4 { grid-template-columns: repeat(4, 1fr); }
-.grid-3 { grid-template-columns: repeat(3, 1fr); }
-.grid-2 { grid-template-columns: repeat(2, 1fr); }
-.grid-1 { grid-template-columns: 1fr; }
-.card { background: var(--surface); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); }
-.card h3 { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-.card .value { font-size: 32px; font-weight: 700; }
-.card .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-.card .trend { font-size: 12px; font-weight: 600; margin-top: 4px; }
-.trend.up { color: var(--green); }
-.trend.down { color: var(--red); }
-.progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-top: 8px; overflow: hidden; }
-.progress-bar .fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+.btn-ghost { background: transparent; color: var(--text-sub); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+.btn-icon { width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+
+/* CARDS */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.card-header h3 { font-size: 14px; font-weight: 600; }
+.stat-card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+.stat-card .value { font-size: 28px; font-weight: 700; line-height: 1.2; }
+.stat-card .trend { font-size: 11px; font-weight: 600; margin-top: 4px; display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; border-radius: 4px; }
+.stat-card .trend.up { color: var(--green); background: var(--green-bg); }
+.stat-card .trend.down { color: var(--red); background: var(--red-bg); }
+
+/* GRIDS */
+.grid { display: grid; gap: 16px; }
+.g2 { grid-template-columns: repeat(2, 1fr); }
+.g3 { grid-template-columns: repeat(3, 1fr); }
+.g4 { grid-template-columns: repeat(4, 1fr); }
+.mb { margin-bottom: 20px; }
+
+/* TABLES */
+.table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-td { padding: 10px 14px; border-bottom: 1px solid rgba(51,65,85,0.5); }
+th { text-align: left; padding: 10px 14px; color: var(--text-muted); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+td { padding: 10px 14px; border-bottom: 1px solid rgba(31,43,61,0.5); }
+tr:hover td { background: rgba(59,130,246,0.03); }
+
+/* BADGES */
 .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-.badge.sent { background: rgba(34,197,94,0.15); color: var(--green); }
-.badge.failed { background: rgba(239,68,68,0.15); color: var(--red); }
-.badge.queued { background: rgba(234,179,8,0.15); color: var(--yellow); }
-.badge.draft { background: rgba(100,116,139,0.2); color: var(--text-muted); }
-.badge.active { background: rgba(56,189,248,0.15); color: var(--accent); }
-.badge.paused { background: rgba(249,115,22,0.15); color: var(--orange); }
-.badge.completed { background: rgba(34,197,94,0.15); color: var(--green); }
-input, select, textarea { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 13px; width: 100%; outline: none; transition: border-color 0.15s; }
+.badge-active { background: var(--green-bg); color: var(--green); }
+.badge-draft { background: rgba(90,101,119,0.2); color: var(--text-muted); }
+.badge-paused { background: var(--yellow-bg); color: var(--yellow); }
+.badge-completed { background: var(--green-bg); color: var(--green); }
+.badge-sent { background: var(--accent-bg); color: var(--accent); }
+.badge-failed { background: var(--red-bg); color: var(--red); }
+.badge-queued { background: var(--yellow-bg); color: var(--yellow); }
+.badge-bounced { background: var(--red-bg); color: var(--red); }
+.badge-unsubscribed { background: var(--red-bg); color: var(--red); }
+
+/* FORMS */
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; font-weight: 600; }
+input, select, textarea { width: 100%; padding: 9px 12px; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; font-size: 13px; outline: none; transition: border-color 0.12s; }
 input:focus, select:focus, textarea:focus { border-color: var(--accent); }
-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
-.form-group { margin-bottom: 16px; }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; }
-.modal { background: var(--surface); border-radius: var(--radius); padding: 28px; width: 100%; max-width: 520px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
-.modal h2 { font-size: 20px; margin-bottom: 20px; }
-.flex { display: flex; gap: 12px; align-items: center; }
-.mt-16 { margin-top: 16px; }
-.mb-16 { margin-bottom: 16px; }
-.mb-24 { margin-bottom: 24px; }
-.text-right { text-align: right; }
-.empty { color: var(--text-muted); text-align: center; padding: 40px; font-size: 14px; }
-.chart-container { position: relative; height: 280px; }
-.tab-bar { display: flex; gap: 4px; margin-bottom: 20px; background: var(--bg); padding: 4px; border-radius: 10px; }
-.tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-muted); transition: all 0.15s; }
-.tab.active { background: var(--accent); color: #fff; }
-.truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; display: inline-block; }
-@media (max-width: 1024px) { .sidebar { display: none; } .main { margin-left: 0; } .grid-4 { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 640px) { .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; } .main { padding: 16px; } }
+textarea { resize: vertical; min-height: 80px; }
+
+/* MODAL */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 200; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow); }
+.modal h2 { font-size: 20px; margin-bottom: 20px; font-weight: 600; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+/* PROGRESS */
+.progress { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 20px; right: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 13px; z-index: 300; box-shadow: var(--shadow); animation: slideUp 0.2s; }
+@keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* EMPTY STATE */
+.empty { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-text { font-size: 14px; margin-bottom: 4px; color: var(--text-sub); }
+.empty-sub { font-size: 12px; }
+
+/* CHART */
+.chart-box { position: relative; height: 240px; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .g4, .g3, .g2 { grid-template-columns: 1fr; }
+  .content { padding: 16px; }
+}
 </style>
 </head>
 <body>
 
+<!-- SIDEBAR -->
 <div class="sidebar">
-  <div class="logo">
-    <h2>EmailBot Pro</h2>
-    <span>Email Automation</span>
+  <div class="sidebar-logo">
+    <h1>EmailBot Pro</h1>
+    <span>Automation Suite</span>
   </div>
-  <div class="nav">
-    <div class="nav-section">Main</div>
-    <div class="nav-item active" data-page="dashboard">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      Dashboard
-    </div>
-    <div class="nav-item" data-page="campaigns">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-      Campaigns
-    </div>
-    <div class="nav-item" data-page="templates">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      Templates
-    </div>
-    <div class="nav-item" data-page="contacts">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Contacts
-    </div>
-    <div class="nav-section">Tools</div>
-    <div class="nav-item" data-page="analytics">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Analytics
-    </div>
-    <div class="nav-item" data-page="smtp">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg>
-      SMTP Accounts
-    </div>
-    <div class="nav-item" data-page="settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Settings
-    </div>
+  <div class="sidebar-nav">
+    <div class="nav-label">Main</div>
+    <div class="nav-link active" data-page="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Dashboard</div>
+    <div class="nav-link" data-page="campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Campaigns</div>
+    <div class="nav-link" data-page="templates"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Templates</div>
+    <div class="nav-link" data-page="contacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Contacts</div>
+    <div class="nav-label">Tools</div>
+    <div class="nav-link" data-page="analytics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Analytics</div>
+    <div class="nav-link" data-page="smtp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg> SMTP Accounts</div>
+    <div class="nav-link" data-page="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</div>
   </div>
+  <div class="sidebar-footer">EmailBot Pro v2.0</div>
 </div>
 
+<!-- MAIN -->
 <div class="main">
-  <!-- DASHBOARD -->
-  <div class="page active" id="page-dashboard">
-    <div class="header">
-      <div><h1>Dashboard</h1><div class="subtitle">Welcome back — here's your email performance overview</div></div>
-      <div class="flex">
-        <button class="btn btn-outline" onclick="togglePause()"><span id="pauseIcon">⏸</span> <span id="pauseLabel">Pause All</span></button>
-        <button class="btn btn-primary" onclick="showUploadModal()">+ Upload CSV</button>
+  <div class="topbar">
+    <h2 id="page-title">Dashboard</h2>
+    <div class="topbar-actions">
+      <span id="global-status" style="font-size:12px;color:var(--green);">● Running</span>
+      <button class="btn btn-ghost btn-sm" onclick="toggleGlobalPause()" id="global-pause-btn">⏸ Pause</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div class="page active" id="pg-dashboard">
+      <div class="grid g4 mb" id="dash-stats"></div>
+      <div class="grid g2 mb">
+        <div class="card"><div class="card-header"><h3>Sends Over Time</h3></div><div class="chart-box"><canvas id="ch-sends"></canvas></div></div>
+        <div class="card"><div class="card-header"><h3>Engagement Rate</h3></div><div class="chart-box"><canvas id="ch-engage"></canvas></div></div>
+      </div>
+      <div class="grid g2">
+        <div class="card"><div class="card-header"><h3>Recent Activity</h3><a style="font-size:12px;color:var(--accent);cursor:pointer;" onclick="go('campaigns')">View All</a></div><div id="dash-activity"></div></div>
+        <div class="card"><div class="card-header"><h3>Campaign Overview</h3></div><div id="dash-campaigns"></div></div>
       </div>
     </div>
 
-    <div class="grid grid-4">
-      <div class="card">
-        <h3>Emails Sent</h3>
-        <div class="value" id="stat-sent">1,247</div>
-        <div class="trend up">↑ 12.5% vs last week</div>
-      </div>
-      <div class="card">
-        <h3>Open Rate</h3>
-        <div class="value" id="stat-opens">43.2%</div>
-        <div class="trend up">↑ 3.1% vs last week</div>
-      </div>
-      <div class="card">
-        <h3>Reply Rate</h3>
-        <div class="value" id="stat-replies">8.7%</div>
-        <div class="trend down">↓ 0.4% vs last week</div>
-      </div>
-      <div class="card">
-        <h3>Bounce Rate</h3>
-        <div class="value" id="stat-bounces">1.2%</div>
-        <div class="trend up">↓ 0.3% vs last week</div>
-      </div>
-    </div>
-
-    <div class="grid grid-2">
-      <div class="card">
-        <h3>Sends Over Time</h3>
-        <div class="chart-container"><canvas id="chart-sends"></canvas></div>
-      </div>
-      <div class="card">
-        <h3>Engagement</h3>
-        <div class="chart-container"><canvas id="chart-engagement"></canvas></div>
-      </div>
-    </div>
-
-    <div class="grid grid-2">
-      <div class="card">
-        <div class="flex" style="justify-content:space-between; margin-bottom:16px;">
-          <h3 style="margin:0;">Recent Activity</h3>
-          <a href="#" onclick="navigate('analytics')" style="font-size:12px; color:var(--accent);">View All</a>
+    <!-- ===== CAMPAIGNS ===== -->
+    <div class="page" id="pg-campaigns">
+      <div class="mb" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:13px;color:var(--text-muted);">Manage and track your email campaigns</div>
         </div>
-        <div id="recent-activity"></div>
+        <button class="btn btn-primary" onclick="openModal('new-campaign')">+ New Campaign</button>
       </div>
-      <div class="card">
-        <h3>Top Performing Campaigns</h3>
-        <div id="top-campaigns"></div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Name</th><th>Status</th><th>Template</th><th>Sent</th><th>Opens</th><th>Replies</th><th>Actions</th></tr></thead>
+        <tbody id="tb-campaigns"></tbody>
+      </table></div></div>
+    </div>
+
+    <!-- ===== TEMPLATES ===== -->
+    <div class="page" id="pg-templates">
+      <div class="mb" style="display:flex;justify-content:space-between;align-items:center;">
+        <div><div style="font-size:13px;color:var(--text-muted);">Create reusable email templates with Handlebars variables</div></div>
+        <button class="btn btn-primary" onclick="openModal('new-template')">+ New Template</button>
       </div>
+      <div class="grid g3" id="tb-templates"></div>
     </div>
-  </div>
 
-  <!-- CAMPAIGNS -->
-  <div class="page" id="page-campaigns">
-    <div class="header">
-      <div><h1>Campaigns</h1><div class="subtitle">Manage your email campaigns</div></div>
-      <button class="btn btn-primary" onclick="showCampaignModal()">+ New Campaign</button>
-    </div>
-    <div class="card">
-      <table>
-        <thead><tr><th>Name</th><th>Status</th><th>Sent</th><th>Opens</th><th>Replies</th><th>Created</th><th>Actions</th></tr></thead>
-        <tbody id="campaigns-table"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- TEMPLATES -->
-  <div class="page" id="page-templates">
-    <div class="header">
-      <div><h1>Templates</h1><div class="subtitle">Create and manage email templates</div></div>
-      <button class="btn btn-primary" onclick="showTemplateModal()">+ New Template</button>
-    </div>
-    <div class="grid grid-3" id="templates-grid"></div>
-  </div>
-
-  <!-- CONTACTS -->
-  <div class="page" id="page-contacts">
-    <div class="header">
-      <div><h1>Contacts</h1><div class="subtitle">Manage your contact lists</div></div>
-      <div class="flex">
-        <button class="btn btn-outline" onclick="showUploadModal()">+ Import CSV</button>
-        <button class="btn btn-primary" onclick="showContactModal()">+ Add Contact</button>
+    <!-- ===== CONTACTS ===== -->
+    <div class="page" id="pg-contacts">
+      <div class="mb" style="display:flex;justify-content:space-between;align-items:center;">
+        <div><div style="font-size:13px;color:var(--text-muted);" id="contacts-subtitle">0 contacts total</div></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="openModal('import-csv')">📁 Import CSV</button>
+          <button class="btn btn-primary" onclick="openModal('new-contact')">+ Add Contact</button>
+        </div>
       </div>
+      <div class="grid g3 mb" id="contacts-stats"></div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="tb-contacts"></tbody>
+      </table></div></div>
     </div>
-    <div class="grid grid-3 mb-24">
-      <div class="card"><h3>Total Contacts</h3><div class="value" id="contacts-total">3,842</div></div>
-      <div class="card"><h3>Active</h3><div class="value" style="color:var(--green)" id="contacts-active">3,201</div></div>
-      <div class="card"><h3>Unsubscribed</h3><div class="value" style="color:var(--red)" id="contacts-unsub">127</div></div>
-    </div>
-    <div class="card">
-      <table>
-        <thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Status</th><th>Last Sent</th><th>Actions</th></tr></thead>
-        <tbody id="contacts-table"></tbody>
-      </table>
-    </div>
-  </div>
 
-  <!-- ANALYTICS -->
-  <div class="page" id="page-analytics">
-    <div class="header">
-      <div><h1>Analytics</h1><div class="subtitle">Detailed performance metrics</div></div>
-      <div class="tab-bar">
-        <div class="tab active" onclick="setAnalyticsRange(this,'7d')">7 Days</div>
-        <div class="tab" onclick="setAnalyticsRange(this,'30d')">30 Days</div>
-        <div class="tab" onclick="setAnalyticsRange(this,'90d')">90 Days</div>
+    <!-- ===== ANALYTICS ===== -->
+    <div class="page" id="pg-analytics">
+      <div class="mb" style="display:flex;justify-content:space-between;align-items:center;">
+        <div><div style="font-size:13px;color:var(--text-muted);">Performance metrics across all campaigns</div></div>
+        <button class="btn btn-ghost" onclick="exportAnalytics()">📊 Export CSV</button>
+      </div>
+      <div class="grid g4 mb" id="analytics-stats"></div>
+      <div class="grid g2 mb">
+        <div class="card"><div class="card-header"><h3>Sends by Day</h3></div><div class="chart-box"><canvas id="ch-volume"></canvas></div></div>
+        <div class="card"><div class="card-header"><h3>Open vs Reply Rate</h3></div><div class="chart-box"><canvas id="ch-rates"></canvas></div></div>
+      </div>
+      <div class="grid g2">
+        <div class="card"><div class="card-header"><h3>Top Domains</h3></div><div id="analytics-domains"></div></div>
+        <div class="card"><div class="card-header"><h3>Bounce Reasons</h3></div><div id="analytics-bounces"></div></div>
       </div>
     </div>
-    <div class="grid grid-4 mb-24">
-      <div class="card"><h3>Total Sent</h3><div class="value">12,847</div></div>
-      <div class="card"><h3>Avg Open Rate</h3><div class="value">41.3%</div></div>
-      <div class="card"><h3>Avg Reply Rate</h3><div class="value">7.2%</div></div>
-      <div class="card"><h3>Deliverability</h3><div class="value">98.8%</div></div>
-    </div>
-    <div class="grid grid-2">
-      <div class="card"><h3>Send Volume by Day</h3><div class="chart-container"><canvas id="chart-volume"></canvas></div></div>
-      <div class="card"><h3>Open vs Reply Rate</h3><div class="chart-container"><canvas id="chart-rates"></canvas></div></div>
-    </div>
-    <div class="grid grid-2">
-      <div class="card"><h3>Top Domains</h3><div id="top-domains"></div></div>
-      <div class="card"><h3>Bounce Reasons</h3><div id="bounce-reasons"></div></div>
-    </div>
-  </div>
 
-  <!-- SMTP -->
-  <div class="page" id="page-smtp">
-    <div class="header">
-      <div><h1>SMTP Accounts</h1><div class="subtitle">Manage your sending accounts</div></div>
-      <button class="btn btn-primary" onclick="showSmtpModal()">+ Add Account</button>
-    </div>
-    <div class="grid grid-2" id="smtp-grid"></div>
-  </div>
-
-  <!-- SETTINGS -->
-  <div class="page" id="page-settings">
-    <div class="header"><div><h1>Settings</h1><div class="subtitle">Configure your bot</div></div></div>
-    <div class="grid grid-2">
-      <div class="card">
-        <h3>Sending Limits</h3>
-        <div class="form-group"><label>Max Emails Per Day</label><input type="number" value="500" id="set-max-daily"></div>
-        <div class="form-group"><label>Min Delay Between Sends (sec)</label><input type="number" value="2" id="set-min-delay"></div>
-        <div class="form-group"><label>Max Delay Between Sends (sec)</label><input type="number" value="7" id="set-max-delay"></div>
-        <div class="form-group"><label>Max Retries on Failure</label><input type="number" value="3" id="set-retries"></div>
-        <button class="btn btn-primary">Save Settings</button>
+    <!-- ===== SMTP ===== -->
+    <div class="page" id="pg-smtp">
+      <div class="mb" style="display:flex;justify-content:space-between;align-items:center;">
+        <div><div style="font-size:13px;color:var(--text-muted);">Manage SMTP sending accounts and warmup</div></div>
+        <button class="btn btn-primary" onclick="openModal('new-smtp')">+ Add Account</button>
       </div>
-      <div class="card">
-        <h3>Warmup Schedule</h3>
-        <div id="warmup-schedule"></div>
+      <div class="grid g2" id="tb-smtp"></div>
+    </div>
+
+    <!-- ===== SETTINGS ===== -->
+    <div class="page" id="pg-settings">
+      <div class="grid g2">
+        <div class="card">
+          <div class="card-header"><h3>Sending Limits</h3></div>
+          <div class="form-group"><label>Max Emails Per Day</label><input type="number" id="set-maxdaily" value="500"></div>
+          <div class="form-group"><label>Min Delay (sec)</label><input type="number" id="set-mindelay" value="2"></div>
+          <div class="form-group"><label>Max Delay (sec)</label><input type="number" id="set-maxdelay" value="7"></div>
+          <div class="form-group"><label>Max Retries</label><input type="number" id="set-retries" value="3"></div>
+          <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Warmup Schedule</h3></div>
+          <div id="warmup-list"></div>
+        </div>
       </div>
     </div>
+
   </div>
 </div>
 
-<!-- MODALS -->
-<div class="modal-overlay" id="modal-overlay" style="display:none" onclick="closeModal(event)">
-  <div class="modal" id="modal-content" onclick="event.stopPropagation()"></div>
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-box"></div>
 </div>
 
 <script>
-// ========== DATA STORE ==========
-const DB = {
-  campaigns: [
-    { id: 1, name: 'Q2 Outreach', status: 'active', sent: 842, opens: 364, replies: 72, created: '2026-05-15', template: 'outreach-v2' },
-    { id: 2, name: 'Partner Intro', status: 'completed', sent: 156, opens: 89, replies: 23, created: '2026-05-01', template: 'partner' },
-    { id: 3, name: 'Follow-up Series', status: 'active', sent: 249, opens: 102, replies: 18, created: '2026-06-01', template: 'followup' },
-    { id: 4, name: 'Newsletter June', status: 'draft', sent: 0, opens: 0, replies: 0, created: '2026-06-20', template: 'newsletter' },
-  ],
+// ==========================================
+//  DATA LAYER — localStorage persistence
+// ==========================================
+const DB_KEY = 'emailbot_pro_db';
+const DEFAULT = {
+  campaigns: [],
   templates: [
-    { id: 1, name: 'Outreach v2', subject: '{{sender_from_name}} — reaching out from {{position}}', preview: 'Hi {{receiver_name}}, I came across your work at {{company}}...', uses: 1204, openRate: 44.2 },
-    { id: 2, name: 'Partner Intro', subject: 'Partnership opportunity — {{company}}', preview: 'Hello {{receiver_name}}, I believe there is a great opportunity...', uses: 156, openRate: 57.1 },
-    { id: 3, name: 'Follow-up', subject: 'Re: Quick follow-up', preview: 'Hi {{receiver_name}}, just wanted to follow up on my last email...', uses: 892, openRate: 38.7 },
-    { id: 4, name: 'Newsletter', subject: 'Your monthly update from {{sender_from_name}}', preview: 'Here is what has been happening this month...', uses: 0, openRate: 0 },
+    { id: 1, name: 'Default Outreach', subject: 'Hello {{receiver_name}}', body: '<p>Hi <strong>{{receiver_name}}</strong>,</p><p>I came across your work at <strong>{{company}}</strong> and wanted to reach out.</p><p>Best,<br>{{sender_from_name}}</p>', uses: 0 }
   ],
-  contacts: [
-    { id: 1, name: 'Sarah Johnson', email: 'sarah@techcorp.com', company: 'TechCorp', status: 'active', lastSent: '2026-06-22' },
-    { id: 2, name: 'Michael Chen', email: 'mchen@innovate.io', company: 'Innovate.io', status: 'active', lastSent: '2026-06-21' },
-    { id: 3, name: 'Emma Williams', email: 'emma@designstudio.co', company: 'Design Studio', status: 'unsubscribed', lastSent: '2026-06-10' },
-    { id: 4, name: 'David Brown', email: 'dbrown@financegroup.com', company: 'Finance Group', status: 'active', lastSent: '2026-06-23' },
-    { id: 5, name: 'Lisa Park', email: 'lisa@startupvc.com', company: 'StartupVC', status: 'active', lastSent: '2026-06-19' },
-    { id: 6, name: 'James Wilson', email: 'jwilson@cloudbase.io', company: 'CloudBase', status: 'bounced', lastSent: '2026-06-15' },
-  ],
+  contacts: [],
   smtpAccounts: [
-    { id: 'primary', host: 'smtp.gmail.com', user: 'bot@company.com', sentToday: 127, maxDaily: 500, warmupDay: 18, warmupDays: 21, status: 'ok' },
-    { id: 'secondary', host: 'smtp.outlook.com', user: 'sales@company.com', sentToday: 84, maxDaily: 300, warmupDay: 12, warmupDays: 21, status: 'ok' },
-    { id: 'backup', host: 'smtp.sendgrid.net', user: 'backup@company.com', sentToday: 23, maxDaily: 200, warmupDay: 5, warmupDays: 21, status: 'warming' },
+    { id: 'smtp-1', host: 'smtp.gmail.com', port: 587, user: '', pass: '', fromName: 'Sender', maxDaily: 500, warmupDay: 1, warmupDays: 21, sentToday: 0, status: 'idle' }
   ],
-  activity: [
-    { time: '2 min ago', type: 'sent', email: 'sarah@techcorp.com', campaign: 'Q2 Outreach' },
-    { time: '5 min ago', type: 'opened', email: 'mchen@innovate.io', campaign: 'Q2 Outreach' },
-    { time: '12 min ago', type: 'replied', email: 'dbrown@financegroup.com', campaign: 'Partner Intro' },
-    { time: '18 min ago', type: 'sent', email: 'lisa@startupvc.com', campaign: 'Q2 Outreach' },
-    { time: '25 min ago', type: 'bounced', email: 'jwilson@cloudbase.io', campaign: 'Follow-up Series' },
-    { time: '34 min ago', type: 'opened', email: 'emma@designstudio.co', campaign: 'Follow-up Series' },
-  ],
-  paused: false
+  logs: [],
+  settings: { maxDaily: 500, minDelay: 2, maxDelay: 7, retries: 3 },
+  paused: false,
+  nextId: { campaign: 1, template: 2, contact: 1, smtp: 2 }
 };
 
-// ========== NAVIGATION ==========
-function navigate(page) {
+function loadDB() {
+  try { return JSON.parse(localStorage.getItem(DB_KEY)) || JSON.parse(JSON.stringify(DEFAULT)); }
+  catch { return JSON.parse(JSON.stringify(DEFAULT)); }
+}
+function saveDB() { localStorage.setItem(DB_KEY, JSON.stringify(DB)); }
+let DB = loadDB();
+
+function genId(type) { return DB.nextId[type] = (DB.nextId[type] || 1) + 1; }
+function ts() { return new Date().toLocaleString(); }
+function today() { return new Date().toISOString().split('T')[0]; }
+
+// ==========================================
+//  NAVIGATION
+// ==========================================
+const titles = { dashboard: 'Dashboard', campaigns: 'Campaigns', templates: 'Templates', contacts: 'Contacts', analytics: 'Analytics', smtp: 'SMTP Accounts', settings: 'Settings' };
+
+function go(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+  document.getElementById('pg-' + page).classList.add('active');
+  document.querySelector(`.nav-link[data-page="${page}"]`).classList.add('active');
+  document.getElementById('page-title').textContent = titles[page] || page;
+  renderAll();
+}
+document.querySelectorAll('.nav-link').forEach(n => n.addEventListener('click', () => go(n.dataset.page)));
+
+// ==========================================
+//  TOAST
+// ==========================================
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
 }
 
-document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', () => navigate(item.dataset.page));
-});
-
-// ========== CHARTS ==========
-const chartColors = { accent: '#38bdf8', green: '#22c55e', red: '#ef4444', yellow: '#eab308', purple: '#a855f7' };
-const chartDefaults = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } }, scales: { x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: 'rgba(51,65,85,0.3)' } }, y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: 'rgba(51,65,85,0.3)' } } } };
-
-function initCharts() {
-  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  new Chart(document.getElementById('chart-sends'), {
-    type: 'line',
-    data: { labels: days, datasets: [
-      { label: 'Sent', data: [180,220,195,240,210,85,42], borderColor: chartColors.accent, backgroundColor: 'rgba(56,189,248,0.1)', fill: true, tension: 0.4 },
-      { label: 'Opened', data: [78,95,82,105,90,35,18], borderColor: chartColors.green, backgroundColor: 'rgba(34,197,94,0.1)', fill: true, tension: 0.4 },
-    ]},
-    options: chartDefaults
-  });
-  new Chart(document.getElementById('chart-engagement'), {
-    type: 'bar',
-    data: { labels: days, datasets: [
-      { label: 'Replies', data: [12,18,14,22,16,4,2], backgroundColor: chartColors.green },
-      { label: 'Bounces', data: [2,1,3,1,2,0,0], backgroundColor: chartColors.red },
-    ]},
-    options: { ...chartDefaults, scales: { ...chartDefaults.scales, x: { ...chartDefaults.scales.x, stacked: true }, y: { ...chartDefaults.scales.y, stacked: true } } }
-  });
-}
-
-function initAnalyticsCharts() {
-  const weeks = ['Week 1','Week 2','Week 3','Week 4'];
-  new Chart(document.getElementById('chart-volume'), {
-    type: 'bar',
-    data: { labels: weeks, datasets: [{ label: 'Emails', data: [3120,3480,2960,3287], backgroundColor: chartColors.accent }] },
-    options: chartDefaults
-  });
-  new Chart(document.getElementById('chart-rates'), {
-    type: 'line',
-    data: { labels: weeks, datasets: [
-      { label: 'Open Rate', data: [38.2,41.5,43.1,42.4], borderColor: chartColors.green, tension: 0.4 },
-      { label: 'Reply Rate', data: [6.8,7.4,7.9,6.7], borderColor: chartColors.purple, tension: 0.4 },
-    ]},
-    options: chartDefaults
-  });
-}
-
-// ========== RENDERERS ==========
-function renderActivity() {
-  const icons = { sent: '📧', opened: '👁', replied: '💬', bounced: '⚠️' };
-  const colors = { sent: chartColors.accent, opened: chartColors.green, replied: chartColors.purple, bounced: chartColors.red };
-  document.getElementById('recent-activity').innerHTML = DB.activity.map(a => `
-    <div style="display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid rgba(51,65,85,0.3);">
-      <div style="width:32px;height:32px;border-radius:8px;background:${colors[a.type]}22;display:flex;align-items:center;justify-content:center;font-size:14px;">${icons[a.type]}</div>
-      <div style="flex:1;">
-        <div style="font-size:13px;font-weight:500;">${a.email}</div>
-        <div style="font-size:11px;color:var(--text-muted);">${a.campaign} · ${a.time}</div>
+// ==========================================
+//  MODAL
+// ==========================================
+function openModal(type) {
+  const box = document.getElementById('modal-box');
+  const m = {
+    'new-campaign': `
+      <h2>New Campaign</h2>
+      <div class="form-group"><label>Name</label><input id="m-camp-name" placeholder="e.g. Q3 Outreach"></div>
+      <div class="form-group"><label>Template</label><select id="m-camp-tpl">${DB.templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Contact Filter</label><select id="m-camp-filter"><option value="active">Active Only</option><option value="all">All Contacts</option></select></div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="createCampaign()">Create</button></div>`,
+    'new-template': `
+      <h2>New Template</h2>
+      <div class="form-group"><label>Name</label><input id="m-tpl-name" placeholder="e.g. Follow-up"></div>
+      <div class="form-group"><label>Subject Line</label><input id="m-tpl-subj" placeholder="Use {{variables}} for personalization"></div>
+      <div class="form-group"><label>Body (HTML)</label><textarea id="m-tpl-body" rows="6" placeholder="<p>Hi {{receiver_name}},</p>..."></textarea></div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">Variables: {{receiver_name}}, {{sender_from_name}}, {{position}}, {{company}}</div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="createTemplate()">Save</button></div>`,
+    'new-contact': `
+      <h2>Add Contact</h2>
+      <div class="form-group"><label>Name</label><input id="m-ct-name" placeholder="John Doe"></div>
+      <div class="form-group"><label>Email</label><input id="m-ct-email" type="email" placeholder="john@example.com"></div>
+      <div class="form-group"><label>Company</label><input id="m-ct-company" placeholder="Acme Corp"></div>
+      <div class="form-group"><label>Position</label><input id="m-ct-position" placeholder="CEO"></div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="createContact()">Add</button></div>`,
+    'import-csv': `
+      <h2>Import Contacts from CSV</h2>
+      <div style="border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;margin-bottom:16px;cursor:pointer;" onclick="document.getElementById('csv-file').click()">
+        <div style="font-size:32px;margin-bottom:8px;">📄</div>
+        <div style="font-size:13px;color:var(--text-sub);">Click to select CSV file</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Required: email column. Optional: name, company</div>
       </div>
-      <span class="badge ${a.type === 'sent' ? 'sent' : a.type === 'replied' ? 'active' : a.type === 'bounced' ? 'failed' : 'queued'}">${a.type}</span>
+      <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="handleCSV(this)">
+      <div id="csv-preview" style="display:none;margin-top:12px;"></div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`,
+    'new-smtp': `
+      <h2>Add SMTP Account</h2>
+      <div class="form-group"><label>Label</label><input id="m-smtp-id" placeholder="e.g. primary"></div>
+      <div class="form-group"><label>Host</label><input id="m-smtp-host" placeholder="smtp.gmail.com"></div>
+      <div class="form-group"><label>Port</label><input id="m-smtp-port" type="number" value="587"></div>
+      <div class="form-group"><label>Username</label><input id="m-smtp-user" placeholder="you@gmail.com"></div>
+      <div class="form-group"><label>Password</label><input id="m-smtp-pass" type="password" placeholder="App password"></div>
+      <div class="form-group"><label>From Name</label><input id="m-smtp-from" placeholder="Your Name"></div>
+      <div class="form-group"><label>Max Daily</label><input id="m-smtp-max" type="number" value="500"></div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="createSMTP()">Add</button></div>`,
+    'edit-template': '',
+    'edit-campaign': '',
+  };
+  box.innerHTML = m[type] || '<p>Unknown modal</p>';
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+
+// ==========================================
+//  CRUD OPERATIONS
+// ==========================================
+function createCampaign() {
+  const name = document.getElementById('m-camp-name').value.trim();
+  if (!name) { toast('Enter campaign name'); return; }
+  const tplId = parseInt(document.getElementById('m-camp-tpl').value);
+  const filter = document.getElementById('m-camp-filter').value;
+  const activeContacts = filter === 'active' ? DB.contacts.filter(c => c.status === 'active') : DB.contacts;
+  DB.campaigns.push({ id: genId('campaign'), name, templateId: tplId, status: 'active', sent: 0, opens: 0, replies: 0, created: today(), contactCount: activeContacts.length });
+  saveDB(); closeModal(); renderAll(); toast('Campaign created');
+}
+
+function createTemplate() {
+  const name = document.getElementById('m-tpl-name').value.trim();
+  const subject = document.getElementById('m-tpl-subj').value;
+  const body = document.getElementById('m-tpl-body').value;
+  if (!name || !subject) { toast('Fill in name and subject'); return; }
+  DB.templates.push({ id: genId('template'), name, subject, body, uses: 0 });
+  saveDB(); closeModal(); renderAll(); toast('Template saved');
+}
+
+function createContact() {
+  const name = document.getElementById('m-ct-name').value.trim();
+  const email = document.getElementById('m-ct-email').value.trim();
+  const company = document.getElementById('m-ct-company').value.trim();
+  const position = document.getElementById('m-ct-position').value.trim();
+  if (!email) { toast('Email is required'); return; }
+  if (DB.contacts.find(c => c.email === email)) { toast('Contact already exists'); return; }
+  DB.contacts.push({ id: genId('contact'), name, email, company, position, status: 'active', created: today() });
+  saveDB(); closeModal(); renderAll(); toast('Contact added');
+}
+
+function createSMTP() {
+  const id = document.getElementById('m-smtp-id').value.trim();
+  const host = document.getElementById('m-smtp-host').value.trim();
+  const port = parseInt(document.getElementById('m-smtp-port').value);
+  const user = document.getElementById('m-smtp-user').value.trim();
+  const pass = document.getElementById('m-smtp-pass').value;
+  const fromName = document.getElementById('m-smtp-from').value.trim();
+  const maxDaily = parseInt(document.getElementById('m-smtp-max').value) || 500;
+  if (!id || !host || !user) { toast('Fill in required fields'); return; }
+  DB.smtpAccounts.push({ id, host, port, user, pass, fromName, maxDaily, warmupDay: 1, warmupDays: 21, sentToday: 0, status: 'warming' });
+  saveDB(); closeModal(); renderAll(); toast('SMTP account added');
+}
+
+function deleteItem(type, id) {
+  if (!confirm('Delete this item?')) return;
+  if (type === 'campaign') DB.campaigns = DB.campaigns.filter(c => c.id !== id);
+  if (type === 'template') DB.templates = DB.templates.filter(t => t.id !== id);
+  if (type === 'contact') DB.contacts = DB.contacts.filter(c => c.id !== id);
+  if (type === 'smtp') DB.smtpAccounts = DB.smtpAccounts.filter(a => a.id !== id);
+  saveDB(); renderAll(); toast('Deleted');
+}
+
+function toggleCampaignStatus(id) {
+  const c = DB.campaigns.find(x => x.id === id);
+  if (!c) return;
+  c.status = c.status === 'active' ? 'paused' : c.status === 'paused' ? 'active' : c.status;
+  saveDB(); renderAll();
+}
+
+function toggleContactStatus(id) {
+  const c = DB.contacts.find(x => x.id === id);
+  if (!c) return;
+  c.status = c.status === 'active' ? 'unsubscribed' : 'active';
+  saveDB(); renderAll();
+}
+
+// ==========================================
+//  CSV PARSING
+// ==========================================
+function handleCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) { toast('CSV is empty'); return; }
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z0-9_]/gi, '_'));
+    const emailIdx = headers.findIndex(h => h.includes('email'));
+    const nameIdx = headers.findIndex(h => h.includes('name'));
+    const companyIdx = headers.findIndex(h => h.includes('company'));
+    if (emailIdx === -1) { toast('No email column found'); return; }
+    let imported = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+      const email = cols[emailIdx];
+      if (!email || !email.includes('@')) continue;
+      if (DB.contacts.find(c => c.email === email)) continue;
+      DB.contacts.push({
+        id: genId('contact'),
+        name: nameIdx >= 0 ? cols[nameIdx] : '',
+        email,
+        company: companyIdx >= 0 ? cols[companyIdx] : '',
+        position: '',
+        status: 'active',
+        created: today()
+      });
+      imported++;
+    }
+    saveDB(); closeModal(); renderAll(); toast(`Imported ${imported} contacts`);
+  };
+  reader.readAsText(file);
+}
+
+// ==========================================
+//  GLOBAL PAUSE
+// ==========================================
+function toggleGlobalPause() {
+  DB.paused = !DB.paused;
+  document.getElementById('global-pause-btn').textContent = DB.paused ? '▶ Resume' : '⏸ Pause';
+  document.getElementById('global-status').innerHTML = DB.paused ? '<span style="color:var(--yellow)">● Paused</span>' : '<span style="color:var(--green)">● Running</span>';
+  saveDB(); toast(DB.paused ? 'Bot paused' : 'Bot resumed');
+}
+
+// ==========================================
+//  SETTINGS
+// ==========================================
+function saveSettings() {
+  DB.settings.maxDaily = parseInt(document.getElementById('set-maxdaily').value) || 500;
+  DB.settings.minDelay = parseInt(document.getElementById('set-mindelay').value) || 2;
+  DB.settings.maxDelay = parseInt(document.getElementById('set-maxdelay').value) || 7;
+  DB.settings.retries = parseInt(document.getElementById('set-retries').value) || 3;
+  saveDB(); toast('Settings saved');
+}
+
+function exportAnalytics() {
+  const rows = [['Campaign','Status','Sent','Opens','Replies','Open Rate','Reply Rate']];
+  DB.campaigns.forEach(c => {
+    const or = c.sent ? (c.opens/c.sent*100).toFixed(1) : '0';
+    const rr = c.sent ? (c.replies/c.sent*100).toFixed(1) : '0';
+    rows.push([c.name, c.status, c.sent, c.opens, c.replies, or+'%', rr+'%']);
+  });
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'emailbot-analytics.csv';
+  a.click();
+  toast('Analytics exported');
+}
+
+// ==========================================
+//  RENDERERS
+// ==========================================
+function renderAll() {
+  renderDashboard();
+  renderCampaigns();
+  renderTemplates();
+  renderContacts();
+  renderAnalytics();
+  renderSMTP();
+  renderSettings();
+}
+
+function renderDashboard() {
+  const totalSent = DB.campaigns.reduce((s, c) => s + c.sent, 0);
+  const totalOpens = DB.campaigns.reduce((s, c) => s + c.opens, 0);
+  const totalReplies = DB.campaigns.reduce((s, c) => s + c.replies, 0);
+  const activeCampaigns = DB.campaigns.filter(c => c.status === 'active').length;
+  const openRate = totalSent ? (totalOpens / totalSent * 100).toFixed(1) : '0.0';
+  const replyRate = totalSent ? (totalReplies / totalSent * 100).toFixed(1) : '0.0';
+
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="card stat-card"><div class="label">Total Sent</div><div class="value">${totalSent.toLocaleString()}</div><div class="trend up">Across ${DB.campaigns.length} campaigns</div></div>
+    <div class="card stat-card"><div class="label">Open Rate</div><div class="value" style="color:var(--green)">${openRate}%</div><div class="trend up">↑ ${totalOpens} opens</div></div>
+    <div class="card stat-card"><div class="label">Reply Rate</div><div class="value" style="color:var(--accent)">${replyRate}%</div><div class="trend up">↑ ${totalReplies} replies</div></div>
+    <div class="card stat-card"><div class="label">Contacts</div><div class="value">${DB.contacts.length}</div><div class="trend up">${DB.contacts.filter(c=>c.status==='active').length} active</div></div>
+  `;
+
+  document.getElementById('dash-activity').innerHTML = DB.logs.slice(-5).reverse().map(l => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(31,43,61,0.3);">
+      <span style="font-size:12px;">${l.type === 'sent' ? '📧' : l.type === 'opened' ? '👁' : l.type === 'replied' ? '💬' : '⚠️'}</span>
+      <div style="flex:1;"><div style="font-size:12px;font-weight:500;">${l.email}</div><div style="font-size:10px;color:var(--text-muted);">${l.time}</div></div>
+      <span class="badge badge-${l.type === 'sent' ? 'sent' : l.type === 'replied' ? 'active' : 'queued'}">${l.type}</span>
     </div>
-  `).join('');
+  `).join('') || '<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">No activity yet</div><div class="empty-sub">Start a campaign to see activity</div></div>';
+
+  document.getElementById('dash-campaigns').innerHTML = DB.campaigns.slice(0, 4).map(c => {
+    const or = c.sent ? Math.round(c.opens / c.sent * 100) : 0;
+    return `
+    <div style="padding:10px 0;border-bottom:1px solid rgba(31,43,61,0.3);">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:13px;font-weight:500;">${c.name}</span>
+        <span style="font-size:12px;color:var(--green);font-weight:600;">${or}%</span>
+      </div>
+      <div class="progress"><div class="progress-fill" style="width:${or}%;background:var(--green);"></div></div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${c.sent} sent · ${c.status}</div>
+    </div>`;
+  }).join('') || '<div class="empty"><div class="empty-text">No campaigns yet</div></div>';
+
+  // Charts
+  renderCharts();
 }
 
-function renderTopCampaigns() {
-  const sorted = [...DB.campaigns].filter(c => c.sent > 0).sort((a,b) => (b.opens/b.sent) - (a.opens/a.sent));
-  document.getElementById('top-campaigns').innerHTML = sorted.map(c => {
-    const rate = Math.round((c.opens / c.sent) * 100);
-    return `
-    <div style="padding:12px 0; border-bottom:1px solid rgba(51,65,85,0.3);">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-        <span style="font-weight:600;font-size:14px;">${c.name}</span>
-        <span style="color:var(--green);font-weight:600;">${rate}% opens</span>
-      </div>
-      <div class="progress-bar"><div class="fill" style="width:${rate}%;background:${rate > 40 ? chartColors.green : chartColors.yellow};"></div></div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${c.sent} sent · ${c.opens} opened · ${c.replies} replied</div>
-    </div>`;
-  }).join('');
+function renderCharts() {
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const sent = days.map(() => Math.floor(Math.random() * 200 + 50));
+  const opened = sent.map(s => Math.floor(s * (0.3 + Math.random() * 0.2)));
+
+  const chartOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } }, scales: { x: { ticks: { color: '#5a6577', font: { size: 10 } }, grid: { color: 'rgba(31,43,61,0.3)' } }, y: { ticks: { color: '#5a6577', font: { size: 10 } }, grid: { color: 'rgba(31,43,61,0.3)' } } } };
+
+  if (window._ch1) window._ch1.destroy();
+  if (window._ch2) window._ch2.destroy();
+  window._ch1 = new Chart(document.getElementById('ch-sends'), { type: 'line', data: { labels: days, datasets: [{ label: 'Sent', data: sent, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.4 }, { label: 'Opened', data: opened, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.4 }] }, options: chartOpts });
+  window._ch2 = new Chart(document.getElementById('ch-engage'), { type: 'bar', data: { labels: days, datasets: [{ label: 'Replies', data: days.map(() => Math.floor(Math.random() * 20 + 2)), backgroundColor: '#8b5cf6' }, { label: 'Bounces', data: days.map(() => Math.floor(Math.random() * 4)), backgroundColor: '#ef4444' }] }, options: chartOpts });
 }
 
 function renderCampaigns() {
-  document.getElementById('campaigns-table').innerHTML = DB.campaigns.map(c => `
-    <tr>
+  const tb = document.getElementById('tb-campaigns');
+  if (!DB.campaigns.length) { tb.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No campaigns yet</div><div class="empty-sub">Create your first campaign to start sending</div></div></td></tr>'; return; }
+  tb.innerHTML = DB.campaigns.map(c => {
+    const tpl = DB.templates.find(t => t.id === c.templateId);
+    const or = c.sent ? (c.opens/c.sent*100).toFixed(0) : 0;
+    const rr = c.sent ? (c.replies/c.sent*100).toFixed(0) : 0;
+    return `<tr>
       <td style="font-weight:600;">${c.name}</td>
-      <td><span class="badge ${c.status}">${c.status}</span></td>
+      <td><span class="badge badge-${c.status}">${c.status}</span></td>
+      <td style="color:var(--text-muted);">${tpl ? tpl.name : '—'}</td>
       <td>${c.sent.toLocaleString()}</td>
-      <td>${c.opens} (${c.sent ? Math.round(c.opens/c.sent*100) : 0}%)</td>
-      <td>${c.replies} (${c.sent ? Math.round(c.replies/c.sent*100) : 0}%)</td>
-      <td style="color:var(--text-muted);">${c.created}</td>
-      <td><button class="btn btn-outline" style="padding:4px 10px;font-size:11px;">Edit</button></td>
-    </tr>
-  `).join('');
+      <td>${c.opens} (${or}%)</td>
+      <td>${c.replies} (${rr}%)</td>
+      <td style="display:flex;gap:4px;">
+        ${c.status !== 'completed' ? `<button class="btn btn-ghost btn-sm" onclick="toggleCampaignStatus(${c.id})">${c.status==='active'?'Pause':'Resume'}</button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="deleteItem('campaign',${c.id})" style="color:var(--red);">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
 }
 
 function renderTemplates() {
-  document.getElementById('templates-grid').innerHTML = DB.templates.map(t => `
-    <div class="card" style="cursor:pointer;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
-        <span style="font-weight:600;font-size:15px;">${t.name}</span>
-        <span class="badge ${t.uses > 0 ? 'active' : 'draft'}">${t.uses > 0 ? 'Active' : 'Draft'}</span>
+  const el = document.getElementById('tb-templates');
+  if (!DB.templates.length) { el.innerHTML = '<div class="empty" style="grid-column:1/-1;"><div class="empty-icon">📝</div><div class="empty-text">No templates yet</div></div>'; return; }
+  el.innerHTML = DB.templates.map(t => `
+    <div class="card" style="cursor:default;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+        <span style="font-weight:600;font-size:14px;">${t.name}</span>
+        <span class="badge ${t.uses > 0 ? 'badge-active' : 'badge-draft'}">${t.uses > 0 ? 'Used' : 'Draft'}</span>
       </div>
-      <div style="font-size:12px;color:var(--accent);margin-bottom:8px;">${t.subject}</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${t.preview}</div>
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:12px;">
-        <span>${t.uses.toLocaleString()} sends</span>
-        <span style="color:${t.openRate > 40 ? 'var(--green)' : 'var(--yellow)'};">${t.openRate}% opens</span>
+      <div style="font-size:12px;color:var(--accent);margin-bottom:6px;">Subject: ${t.subject}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;max-height:60px;overflow:hidden;">${t.body.replace(/<[^>]*>/g, '').substring(0, 120)}...</div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:10px;">
+        <span style="font-size:11px;color:var(--text-muted);">${t.uses} uses</span>
+        <button class="btn btn-ghost btn-sm" onclick="deleteItem('template',${t.id})" style="color:var(--red);">Delete</button>
       </div>
     </div>
   `).join('');
 }
 
 function renderContacts() {
-  document.getElementById('contacts-table').innerHTML = DB.contacts.map(c => `
-    <tr>
-      <td style="font-weight:500;">${c.name}</td>
-      <td style="color:var(--accent);">${c.email}</td>
-      <td style="color:var(--text-muted);">${c.company}</td>
-      <td><span class="badge ${c.status === 'active' ? 'sent' : c.status === 'unsubscribed' ? 'failed' : 'queued'}">${c.status}</span></td>
-      <td style="color:var(--text-muted);">${c.lastSent}</td>
-      <td><button class="btn btn-outline" style="padding:4px 10px;font-size:11px;">Edit</button></td>
-    </tr>
-  `).join('');
+  const active = DB.contacts.filter(c => c.status === 'active').length;
+  const unsub = DB.contacts.filter(c => c.status === 'unsubscribed').length;
+  const bounced = DB.contacts.filter(c => c.status === 'bounced').length;
+
+  document.getElementById('contacts-subtitle').textContent = `${DB.contacts.length} contacts total`;
+  document.getElementById('contacts-stats').innerHTML = `
+    <div class="card stat-card"><div class="label">Total</div><div class="value">${DB.contacts.length}</div></div>
+    <div class="card stat-card"><div class="label">Active</div><div class="value" style="color:var(--green)">${active}</div></div>
+    <div class="card stat-card"><div class="label">Unsubscribed</div><div class="value" style="color:var(--red)">${unsub}</div></div>
+  `;
+
+  const tb = document.getElementById('tb-contacts');
+  if (!DB.contacts.length) { tb.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No contacts yet</div><div class="empty-sub">Import a CSV or add contacts manually</div></div></td></tr>'; return; }
+  tb.innerHTML = DB.contacts.map(c => `<tr>
+    <td style="font-weight:500;">${c.name || '—'}</td>
+    <td style="color:var(--accent);">${c.email}</td>
+    <td style="color:var(--text-muted);">${c.company || '—'}</td>
+    <td><span class="badge badge-${c.status}">${c.status}</span></td>
+    <td style="display:flex;gap:4px;">
+      <button class="btn btn-ghost btn-sm" onclick="toggleContactStatus(${c.id})">${c.status==='active'?'Unsub':'Activate'}</button>
+      <button class="btn btn-ghost btn-sm" onclick="deleteItem('contact',${c.id})" style="color:var(--red);">Delete</button>
+    </td>
+  </tr>`).join('');
 }
 
-function renderSmtp() {
-  document.getElementById('smtp-grid').innerHTML = DB.smtpAccounts.map(a => {
-    const dailyPct = Math.round((a.sentToday / a.maxDaily) * 100);
-    const warmupPct = Math.round((a.warmupDay / a.warmupDays) * 100);
+function renderAnalytics() {
+  const totalSent = DB.campaigns.reduce((s, c) => s + c.sent, 0);
+  const totalOpens = DB.campaigns.reduce((s, c) => s + c.opens, 0);
+  const totalReplies = DB.campaigns.reduce((s, c) => s + c.replies, 0);
+  const openRate = totalSent ? (totalOpens/totalSent*100).toFixed(1) : '0.0';
+  const replyRate = totalSent ? (totalReplies/totalSent*100).toFixed(1) : '0.0';
+
+  document.getElementById('analytics-stats').innerHTML = `
+    <div class="card stat-card"><div class="label">Total Sent</div><div class="value">${totalSent.toLocaleString()}</div></div>
+    <div class="card stat-card"><div class="label">Avg Open Rate</div><div class="value" style="color:var(--green)">${openRate}%</div></div>
+    <div class="card stat-card"><div class="label">Avg Reply Rate</div><div class="value" style="color:var(--accent)">${replyRate}%</div></div>
+    <div class="card stat-card"><div class="label">Total Contacts</div><div class="value">${DB.contacts.length}</div></div>
+  `;
+
+  const domains = {};
+  DB.contacts.forEach(c => { const d = c.email.split('@')[1]; if(d) domains[d] = (domains[d]||0)+1; });
+  const sorted = Object.entries(domains).sort((a,b) => b[1]-a[1]).slice(0,5);
+  document.getElementById('analytics-domains').innerHTML = sorted.map(([d,c]) => `
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(31,43,61,0.3);">
+      <span>${d}</span><span style="font-weight:600;color:var(--accent);">${c} contacts</span>
+    </div>
+  `).join('') || '<div class="empty"><div class="empty-sub">No contact data yet</div></div>';
+
+  document.getElementById('analytics-bounces').innerHTML = '<div class="empty"><div class="empty-sub">No bounce data yet</div></div>';
+
+  // Charts
+  if (window._ch3) window._ch3.destroy();
+  if (window._ch4) window._ch4.destroy();
+  const weeks = ['Week 1','Week 2','Week 3','Week 4'];
+  const chartOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } }, scales: { x: { ticks: { color: '#5a6577' }, grid: { color: 'rgba(31,43,61,0.3)' } }, y: { ticks: { color: '#5a6577' }, grid: { color: 'rgba(31,43,61,0.3)' } } } };
+  window._ch3 = new Chart(document.getElementById('ch-volume'), { type: 'bar', data: { labels: weeks, datasets: [{ label: 'Emails', data: weeks.map(() => Math.floor(Math.random()*1000+200)), backgroundColor: '#3b82f6' }] }, options: chartOpts });
+  window._ch4 = new Chart(document.getElementById('ch-rates'), { type: 'line', data: { labels: weeks, datasets: [{ label: 'Open %', data: [35,42,38,44], borderColor: '#10b981', tension: 0.4 }, { label: 'Reply %', data: [5,8,6,9], borderColor: '#8b5cf6', tension: 0.4 }] }, options: chartOpts });
+}
+
+function renderSMTP() {
+  const el = document.getElementById('tb-smtp');
+  if (!DB.smtpAccounts.length) { el.innerHTML = '<div class="empty" style="grid-column:1/-1;"><div class="empty-icon">📧</div><div class="empty-text">No SMTP accounts</div><div class="empty-sub">Add an account to start sending</div></div>'; return; }
+  el.innerHTML = DB.smtpAccounts.map(a => {
+    const dailyPct = Math.min(Math.round(a.sentToday / a.maxDaily * 100), 100);
+    const warmupPct = Math.min(Math.round(a.warmupDay / a.warmupDays * 100), 100);
     return `
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:14px;">
         <div>
-          <div style="font-weight:600;font-size:16px;">${a.id}</div>
-          <div style="font-size:12px;color:var(--text-muted);">${a.user} @ ${a.host}</div>
+          <div style="font-weight:600;font-size:15px;">${a.id}</div>
+          <div style="font-size:11px;color:var(--text-muted);">${a.user || 'Not configured'} @ ${a.host}</div>
         </div>
-        <span class="badge ${a.status === 'ok' ? 'sent' : 'queued'}">${a.status === 'ok' ? 'Connected' : 'Warming Up'}</span>
+        <div style="display:flex;gap:4px;">
+          <span class="badge ${a.status === 'idle' ? 'badge-draft' : a.status === 'ok' ? 'badge-active' : 'badge-queued'}">${a.status}</span>
+          <button class="btn btn-ghost btn-sm" onclick="deleteItem('smtp','${a.id}')" style="color:var(--red);">✕</button>
+        </div>
       </div>
-      <div style="margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
-          <span style="color:var(--text-muted);">Daily Limit</span>
-          <span style="font-weight:600;">${a.sentToday} / ${a.maxDaily}</span>
-        </div>
-        <div class="progress-bar"><div class="fill" style="width:${dailyPct}%;background:${dailyPct > 80 ? chartColors.red : chartColors.green};"></div></div>
+      <div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--text-muted);">Daily</span><span>${a.sentToday}/${a.maxDaily}</span></div>
+        <div class="progress"><div class="progress-fill" style="width:${dailyPct}%;background:${dailyPct > 80 ? 'var(--red)' : 'var(--green)'};"></div></div>
       </div>
       <div>
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
-          <span style="color:var(--text-muted);">Warmup</span>
-          <span style="font-weight:600;">Day ${a.warmupDay} / ${a.warmupDays}</span>
-        </div>
-        <div class="progress-bar"><div class="fill" style="width:${warmupPct}%;background:${chartColors.accent};"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--text-muted);">Warmup</span><span>Day ${a.warmupDay}/${a.warmupDays}</span></div>
+        <div class="progress"><div class="progress-fill" style="width:${warmupPct}%;background:var(--accent);"></div></div>
       </div>
     </div>`;
   }).join('');
 }
 
-function renderWarmupSchedule() {
+function renderSettings() {
+  document.getElementById('set-maxdaily').value = DB.settings.maxDaily;
+  document.getElementById('set-mindelay').value = DB.settings.minDelay;
+  document.getElementById('set-maxdelay').value = DB.settings.maxDelay;
+  document.getElementById('set-retries').value = DB.settings.retries;
+
   const schedule = [
-    { day: 1, pct: 1 }, { day: 3, pct: 2.5 }, { day: 5, pct: 5 },
-    { day: 7, pct: 15 }, { day: 10, pct: 40 }, { day: 14, pct: 75 },
-    { day: 18, pct: 90 }, { day: 21, pct: 100 }
+    {day:1,pct:1},{day:3,pct:2.5},{day:5,pct:5},{day:7,pct:15},{day:10,pct:40},{day:14,pct:75},{day:18,pct:90},{day:21,pct:100}
   ];
-  document.getElementById('warmup-schedule').innerHTML = schedule.map(s => `
-    <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(51,65,85,0.3);">
-      <span style="width:60px;font-size:12px;color:var(--text-muted);">Day ${s.day}</span>
-      <div style="flex:1;"><div class="progress-bar"><div class="fill" style="width:${s.pct}%;background:${chartColors.accent};"></div></div></div>
-      <span style="width:40px;font-size:12px;font-weight:600;text-align:right;">${s.pct}%</span>
+  document.getElementById('warmup-list').innerHTML = schedule.map(s => `
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(31,43,61,0.3);">
+      <span style="width:50px;font-size:11px;color:var(--text-muted);">Day ${s.day}</span>
+      <div style="flex:1;"><div class="progress"><div class="progress-fill" style="width:${s.pct}%;background:var(--accent);"></div></div></div>
+      <span style="width:35px;font-size:11px;font-weight:600;text-align:right;">${s.pct}%</span>
     </div>
   `).join('');
 }
 
-function renderAnalytics() {
-  const domains = [
-    { name: 'gmail.com', sent: 4520, openRate: 42.1 },
-    { name: 'outlook.com', sent: 3210, openRate: 38.7 },
-    { name: 'yahoo.com', sent: 1890, openRate: 35.2 },
-    { name: 'icloud.com', sent: 1240, openRate: 44.8 },
-    { name: 'company.io', sent: 987, openRate: 52.3 },
-  ];
-  document.getElementById('top-domains').innerHTML = domains.map(d => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(51,65,85,0.3);">
-      <span style="font-weight:500;">${d.name}</span>
-      <div style="text-align:right;">
-        <span style="font-size:13px;font-weight:600;color:var(--green);">${d.openRate}%</span>
-        <span style="font-size:11px;color:var(--text-muted);margin-left:8px;">${d.sent.toLocaleString()} sent</span>
-      </div>
-    </div>
-  `).join('');
-
-  const bounces = [
-    { reason: 'Mailbox full', count: 24, pct: 42 },
-    { reason: 'Invalid address', count: 18, pct: 32 },
-    { reason: 'Domain not found', count: 9, pct: 16 },
-    { reason: 'Spam filter', count: 6, pct: 10 },
-  ];
-  document.getElementById('bounce-reasons').innerHTML = bounces.map(b => `
-    <div style="padding:10px 0;border-bottom:1px solid rgba(51,65,85,0.3);">
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-        <span style="font-size:13px;">${b.reason}</span>
-        <span style="font-size:12px;color:var(--red);font-weight:600;">${b.count}</span>
-      </div>
-      <div class="progress-bar"><div class="fill" style="width:${b.pct}%;background:var(--red);"></div></div>
-    </div>
-  `).join('');
-}
-
-// ========== ACTIONS ==========
-function togglePause() {
-  DB.paused = !DB.paused;
-  document.getElementById('pauseIcon').textContent = DB.paused ? '▶' : '⏸';
-  document.getElementById('pauseLabel').textContent = DB.paused ? 'Resume All' : 'Pause All';
-  showToast(DB.paused ? 'All sending paused' : 'All sending resumed');
-}
-
-function showToast(msg) {
-  const toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;font-size:13px;z-index:300;animation:fadeIn 0.2s;box-shadow:0 8px 32px rgba(0,0,0,0.3);';
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
-
-function closeModal(e) { document.getElementById('modal-overlay').style.display = 'none'; }
-
-function showModal(html) {
-  document.getElementById('modal-content').innerHTML = html;
-  document.getElementById('modal-overlay').style.display = 'flex';
-}
-
-function showUploadModal() {
-  showModal(`
-    <h2>Upload CSV</h2>
-    <div style="border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;margin-bottom:16px;cursor:pointer;" ondrop="handleDrop(event)" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'">
-      <div style="font-size:36px;margin-bottom:8px;">📁</div>
-      <div style="font-size:14px;color:var(--text);">Drag & drop CSV file here</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">or click to browse</div>
-    </div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Required columns: email (or receiver_email), name (optional)</div>
-    <div class="flex" style="justify-content:flex-end;">
-      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary">Upload & Send</button>
-    </div>
-  `);
-}
-
-function showCampaignModal() {
-  showModal(`
-    <h2>New Campaign</h2>
-    <div class="form-group"><label>Campaign Name</label><input placeholder="e.g. Q3 Outreach"></div>
-    <div class="form-group"><label>Template</label><select>${DB.templates.map(t => `<option>${t.name}</option>`).join('')}</select></div>
-    <div class="form-group"><label>Contact List</label><select><option>All Active Contacts (${DB.contacts.filter(c=>c.status==='active').length})</option><option>Imported List</option></select></div>
-    <div class="form-group"><label>Schedule</label><select><option>Send Immediately</option><option>Schedule for Later</option><option>Drip Feed (24hrs)</option></select></div>
-    <div class="flex" style="justify-content:flex-end;">
-      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-success">Create Campaign</button>
-    </div>
-  `);
-}
-
-function showTemplateModal() {
-  showModal(`
-    <h2>New Template</h2>
-    <div class="form-group"><label>Template Name</label><input placeholder="e.g. Follow-up v2"></div>
-    <div class="form-group"><label>Subject Line</label><input placeholder="Use {{variables}} for personalization"></div>
-    <div class="form-group"><label>Email Body (HTML)</label><textarea rows="8" placeholder="Write your email template..."></textarea></div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Available variables: {{receiver_name}}, {{sender_from_name}}, {{position}}, {{company}}</div>
-    <div class="flex" style="justify-content:flex-end;">
-      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary">Save Template</button>
-    </div>
-  `);
-}
-
-function showContactModal() {
-  showModal(`
-    <h2>Add Contact</h2>
-    <div class="form-group"><label>Full Name</label><input placeholder="John Doe"></div>
-    <div class="form-group"><label>Email</label><input type="email" placeholder="john@example.com"></div>
-    <div class="form-group"><label>Company</label><input placeholder="Acme Corp"></div>
-    <div class="form-group"><label>Position</label><input placeholder="CEO"></div>
-    <div class="flex" style="justify-content:flex-end;">
-      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary">Add Contact</button>
-    </div>
-  `);
-}
-
-function showSmtpModal() {
-  showModal(`
-    <h2>Add SMTP Account</h2>
-    <div class="form-group"><label>Account ID</label><input placeholder="e.g. primary"></div>
-    <div class="form-group"><label>SMTP Host</label><input placeholder="smtp.gmail.com"></div>
-    <div class="form-group"><label>Port</label><input type="number" value="587"></div>
-    <div class="form-group"><label>Username</label><input placeholder="you@gmail.com"></div>
-    <div class="form-group"><label>Password</label><input type="password" placeholder="App password"></div>
-    <div class="form-group"><label>From Name</label><input placeholder="Your Name"></div>
-    <div class="form-group"><label>Max Daily</label><input type="number" value="500"></div>
-    <div class="flex" style="justify-content:flex-end;">
-      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary">Add Account</button>
-    </div>
-  `);
-}
-
-function setAnalyticsRange(el, range) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  showToast(`Showing data for ${range === '7d' ? 'last 7 days' : range === '30d' ? 'last 30 days' : 'last 90 days'}`);
-}
-
-// ========== INIT ==========
-document.addEventListener('DOMContentLoaded', () => {
-  initCharts();
-  renderActivity();
-  renderTopCampaigns();
-  renderCampaigns();
-  renderTemplates();
-  renderContacts();
-  renderSmtp();
-  renderWarmupSchedule();
-  renderAnalytics();
-  initAnalyticsCharts();
-});
+// ==========================================
+//  INIT
+// ==========================================
+document.getElementById('global-pause-btn').textContent = DB.paused ? '▶ Resume' : '⏸ Pause';
+document.getElementById('global-status').innerHTML = DB.paused ? '<span style="color:var(--yellow)">● Paused</span>' : '<span style="color:var(--green)">● Running</span>';
+renderAll();
 </script>
 </body>
 </html>
