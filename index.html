@@ -210,6 +210,7 @@ textarea { resize: vertical; min-height: 80px; }
         <div><div style="font-size:13px;color:var(--text-muted);" id="contacts-subtitle">0 contacts total</div></div>
         <div style="display:flex;gap:8px;">
           <button class="btn btn-ghost" onclick="openModal('import-csv')">📁 Import CSV</button>
+          <button class="btn btn-ghost" onclick="openModal('paste-leads')">📋 Paste TXT Leads</button>
           <button class="btn btn-primary" onclick="openModal('new-contact')">+ Add Contact</button>
         </div>
       </div>
@@ -365,6 +366,30 @@ function openModal(type) {
       <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="handleCSV(this)">
       <div id="csv-preview" style="display:none;margin-top:12px;"></div>
       <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`,
+    'paste-leads': `
+      <h2>Paste TXT Leads</h2>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Paste your leads below — one per line. Supports formats:</div>
+        <div style="font-size:11px;color:var(--text-sub);background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-family:monospace;line-height:1.6;">
+          <div>email@example.com</div>
+          <div>email@example.com | John Doe | Company</div>
+          <div>John Doe &lt;email@example.com&gt;</div>
+          <div>email@example.com, John Doe, Company</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Leads (one per line)</label>
+        <textarea id="m-txt-leads" rows="12" placeholder="john@example.com&#10;jane@example.com | Jane Smith | Acme Corp&#10;Bob Jones &lt;bob@company.io&gt;&#10;alice@startup.com, Alice Lee, TechCo" style="font-family:monospace;font-size:12px;line-height:1.6;"></textarea>
+      </div>
+      <div id="txt-preview" style="margin-bottom:12px;"></div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="btn btn-ghost btn-sm" onclick="previewTxtLeads()">👁 Preview</button>
+        <span id="txt-count" style="font-size:12px;color:var(--text-muted);line-height:30px;"></span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="importTxtLeads()">Import Leads</button>
+      </div>`,
     'new-smtp': `
       <h2>Add SMTP Account</h2>
       <div class="form-group"><label>Label</label><input id="m-smtp-id" placeholder="e.g. primary"></div>
@@ -488,6 +513,122 @@ function handleCSV(input) {
     saveDB(); closeModal(); renderAll(); toast(`Imported ${imported} contacts`);
   };
   reader.readAsText(file);
+}
+
+// ==========================================
+//  TXT LEADS PARSING
+// ==========================================
+function parseTxtLine(line) {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('//')) return null;
+
+  const emailRegex = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/;
+  const emailMatch = trimmed.match(emailRegex);
+  if (!emailMatch) return null;
+  const email = emailMatch[0].toLowerCase();
+
+  let name = '';
+  let company = '';
+
+  // Format: email | name | company
+  if (trimmed.includes('|')) {
+    const parts = trimmed.split('|').map(p => p.trim());
+    name = parts[1] || '';
+    company = parts[2] || '';
+  }
+  // Format: name <email>
+  else if (trimmed.includes('<') && trimmed.includes('>')) {
+    const namePart = trimmed.split('<')[0].trim().replace(/[,"]/g, '');
+    name = namePart;
+  }
+  // Format: email, name, company
+  else if (trimmed.includes(',')) {
+    const parts = trimmed.split(',').map(p => p.trim());
+    if (parts.length >= 2) name = parts[1];
+    if (parts.length >= 3) company = parts[2];
+  }
+
+  return { email, name, company };
+}
+
+function parseTxtLeads(text) {
+  const lines = text.split(/\r?\n/);
+  const leads = [];
+  const seen = new Set();
+  for (const line of lines) {
+    const lead = parseTxtLine(line);
+    if (lead && !seen.has(lead.email)) {
+      seen.add(lead.email);
+      leads.push(lead);
+    }
+  }
+  return leads;
+}
+
+let _pendingTxtLeads = [];
+
+function previewTxtLeads() {
+  const text = document.getElementById('m-txt-leads').value;
+  const leads = parseTxtLeads(text);
+  _pendingTxtLeads = leads;
+  const preview = document.getElementById('txt-preview');
+  const count = document.getElementById('txt-count');
+
+  if (leads.length === 0) {
+    preview.innerHTML = '<div style="font-size:12px;color:var(--red);">No valid leads found. Check the format.</div>';
+    count.textContent = '';
+    return;
+  }
+
+  const existing = leads.filter(l => DB.contacts.find(c => c.email === l.email));
+  const newLeads = leads.filter(l => !DB.contacts.find(c => c.email === l.email));
+
+  preview.innerHTML = `
+    <div style="background:var(--bg);border-radius:8px;padding:10px 12px;max-height:180px;overflow-y:auto;">
+      <table style="width:100%;font-size:11px;">
+        <thead><tr><th style="text-align:left;padding:4px 6px;color:var(--text-muted);">Email</th><th style="text-align:left;padding:4px 6px;color:var(--text-muted);">Name</th><th style="text-align:left;padding:4px 6px;color:var(--text-muted);">Company</th><th style="text-align:left;padding:4px 6px;color:var(--text-muted);">Status</th></tr></thead>
+        <tbody>
+          ${leads.slice(0, 20).map(l => {
+            const exists = DB.contacts.find(c => c.email === l.email);
+            return `<tr>
+              <td style="padding:3px 6px;">${l.email}</td>
+              <td style="padding:3px 6px;color:var(--text-sub);">${l.name || '—'}</td>
+              <td style="padding:3px 6px;color:var(--text-sub);">${l.company || '—'}</td>
+              <td style="padding:3px 6px;"><span class="badge ${exists ? 'badge-queued' : 'badge-active'}">${exists ? 'Duplicate' : 'New'}</span></td>
+            </tr>`;
+          }).join('')}
+          ${leads.length > 20 ? `<tr><td colspan="4" style="padding:4px 6px;color:var(--text-muted);">... and ${leads.length - 20} more</td></tr>` : ''}
+        </tbody>
+      </table>
+    </div>
+  `;
+  count.textContent = `${leads.length} leads found · ${newLeads.length} new · ${existing.length} duplicates`;
+}
+
+function importTxtLeads() {
+  const leads = _pendingTxtLeads.length > 0 ? _pendingTxtLeads : parseTxtLeads(document.getElementById('m-txt-leads').value);
+  if (leads.length === 0) { toast('No leads to import'); return; }
+
+  let imported = 0;
+  let duplicates = 0;
+  for (const lead of leads) {
+    if (DB.contacts.find(c => c.email === lead.email)) {
+      duplicates++;
+      continue;
+    }
+    DB.contacts.push({
+      id: genId('contact'),
+      name: lead.name,
+      email: lead.email,
+      company: lead.company,
+      position: '',
+      status: 'active',
+      created: today()
+    });
+    imported++;
+  }
+  saveDB(); closeModal(); _pendingTxtLeads = []; renderAll();
+  toast(`Imported ${imported} leads${duplicates > 0 ? ` (${duplicates} duplicates skipped)` : ''}`);
 }
 
 // ==========================================
