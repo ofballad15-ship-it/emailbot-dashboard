@@ -209,12 +209,22 @@ textarea { resize: vertical; min-height: 80px; }
       <div class="mb" style="display:flex;justify-content:space-between;align-items:center;">
         <div><div style="font-size:13px;color:var(--text-muted);" id="contacts-subtitle">0 contacts total</div></div>
         <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="openModal('paste-leads')">📋 Paste TXT Leads</button>
           <button class="btn btn-ghost" onclick="openModal('import-csv')">📁 Import CSV</button>
-          <button class="btn btn-ghost" onclick="openModal('paste-leads')">📋 Paste TXT Leads</button>
-          <button class="btn btn-primary" onclick="openModal('new-contact')">+ Add Contact</button>
+          <button class="btn btn-ghost" onclick="openModal('new-contact')">+ Add Contact</button>
         </div>
       </div>
       <div class="grid g3 mb" id="contacts-stats"></div>
+      <div class="card" style="margin-bottom:20px;border:1px dashed var(--accent);background:rgba(59,130,246,0.03);">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:44px;height:44px;border-radius:10px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:20px;">📋</div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:600;margin-bottom:2px;">Quick Import Leads</div>
+            <div style="font-size:12px;color:var(--text-muted);">Paste your TXT leads directly — emails, names, companies. One per line.</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('paste-leads')">Paste Leads</button>
+        </div>
+      </div>
       <div class="card"><div class="table-wrap"><table>
         <thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody id="tb-contacts"></tbody>
@@ -263,6 +273,11 @@ textarea { resize: vertical; min-height: 80px; }
           <div id="warmup-list"></div>
         </div>
       </div>
+      <div class="card" style="margin-top:20px;border-color:var(--red);">
+        <div class="card-header"><h3 style="color:var(--red);">Danger Zone</h3></div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">This will delete all your campaigns, contacts, templates, and settings.</p>
+        <button class="btn btn-danger" onclick="if(confirm('Delete ALL data? This cannot be undone.')){localStorage.clear();location.reload();}">Clear All Data</button>
+      </div>
     </div>
 
   </div>
@@ -277,20 +292,16 @@ textarea { resize: vertical; min-height: 80px; }
 // ==========================================
 //  DATA LAYER — localStorage persistence
 // ==========================================
-const DB_KEY = 'emailbot_pro_db';
+const DB_KEY = 'emailbot_pro_v3';
 const DEFAULT = {
   campaigns: [],
-  templates: [
-    { id: 1, name: 'Default Outreach', subject: 'Hello {{receiver_name}}', body: '<p>Hi <strong>{{receiver_name}}</strong>,</p><p>I came across your work at <strong>{{company}}</strong> and wanted to reach out.</p><p>Best,<br>{{sender_from_name}}</p>', uses: 0 }
-  ],
+  templates: [],
   contacts: [],
-  smtpAccounts: [
-    { id: 'smtp-1', host: 'smtp.gmail.com', port: 587, user: '', pass: '', fromName: 'Sender', maxDaily: 500, warmupDay: 1, warmupDays: 21, sentToday: 0, status: 'idle' }
-  ],
+  smtpAccounts: [],
   logs: [],
   settings: { maxDaily: 500, minDelay: 2, maxDelay: 7, retries: 3 },
   paused: false,
-  nextId: { campaign: 1, template: 2, contact: 1, smtp: 2 }
+  nextId: { campaign: 1, template: 1, contact: 1, smtp: 1 }
 };
 
 function loadDB() {
