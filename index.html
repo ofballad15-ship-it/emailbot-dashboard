@@ -125,12 +125,68 @@ textarea { resize: vertical; min-height: 80px; }
 /* CHART */
 .chart-box { position: relative; height: 240px; }
 
-/* RESPONSIVE */
+/* RESPONSIVE - MOBILE */
 @media (max-width: 768px) {
   .sidebar { display: none; }
-  .main { margin-left: 0; }
+  .main { margin-left: 0; padding-bottom: 70px; }
   .g4, .g3, .g2 { grid-template-columns: 1fr; }
-  .content { padding: 16px; }
+  .content { padding: 12px; }
+  .topbar { padding: 12px 16px; }
+  .topbar h2 { font-size: 16px; }
+  .card { padding: 14px; }
+  .stat-card .value { font-size: 22px; }
+  .modal { width: 95%; padding: 20px; max-height: 90vh; }
+  .btn { padding: 10px 16px; font-size: 14px; }
+  .empty { padding: 32px 16px; }
+
+  /* Mobile bottom nav */
+  .mobile-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface); border-top: 1px solid var(--border);
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 8px 0 env(safe-area-inset-bottom, 8px);
+    z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+  }
+  .mobile-nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    color: var(--text-muted); font-size: 10px; cursor: pointer;
+    padding: 4px 12px; border-radius: 8px; transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-nav-item.active { color: var(--accent); }
+  .mobile-nav-item svg { width: 20px; height: 20px; }
+
+  /* Mobile tables to cards */
+  table { display: none; }
+  .table-wrap { display: block; }
+  .table-wrap::before {
+    content: attr(data-mobile-label);
+    display: none;
+  }
+
+  /* Show card layout on mobile */
+  .mobile-card-list { display: flex !important; flex-direction: column; gap: 10px; }
+  .mobile-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .mobile-card .mc-header { display: flex; justify-content: space-between; align-items: center; }
+  .mobile-card .mc-title { font-weight: 600; font-size: 14px; }
+  .mobile-card .mc-sub { font-size: 11px; color: var(--text-muted); }
+  .mobile-card .mc-row { display: flex; justify-content: space-between; font-size: 12px; }
+  .mobile-card .mc-label { color: var(--text-muted); }
+  .mobile-card .mc-actions { display: flex; gap: 6px; margin-top: 4px; }
+
+  /* Mobile chart */
+  .chart-box { height: 200px; }
+
+  /* Mobile paste area */
+  .paste-area { min-height: 120px; font-size: 14px; }
+
+  /* Full-width buttons on mobile */
+  .mb .btn { width: 100%; justify-content: center; }
+  .page-header-mobile .btn-group { display: flex; gap: 8px; width: 100%; }
+  .page-header-mobile .btn-group .btn { flex: 1; }
 }
 </style>
 </head>
@@ -284,6 +340,30 @@ textarea { resize: vertical; min-height: 80px; }
 </div>
 
 <!-- MODAL -->
+<!-- MOBILE BOTTOM NAV -->
+<div class="mobile-nav">
+  <div class="mobile-nav-item active" data-page="dashboard" onclick="go('dashboard')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Home
+  </div>
+  <div class="mobile-nav-item" data-page="campaigns" onclick="go('campaigns')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    Campaigns
+  </div>
+  <div class="mobile-nav-item" data-page="contacts" onclick="go('contacts')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    Contacts
+  </div>
+  <div class="mobile-nav-item" data-page="templates" onclick="go('templates')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    Templates
+  </div>
+  <div class="mobile-nav-item" data-page="settings" onclick="go('settings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    More
+  </div>
+</div>
+
 <div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modal-box"></div>
 </div>
@@ -323,8 +403,11 @@ const titles = { dashboard: 'Dashboard', campaigns: 'Campaigns', templates: 'Tem
 function go(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('pg-' + page).classList.add('active');
   document.querySelector(`.nav-link[data-page="${page}"]`).classList.add('active');
+  const mobileNav = document.querySelector(`.mobile-nav-item[data-page="${page}"]`);
+  if (mobileNav) mobileNav.classList.add('active');
   document.getElementById('page-title').textContent = titles[page] || page;
   renderAll();
 }
@@ -690,7 +773,56 @@ function renderAll() {
   renderAnalytics();
   renderSMTP();
   renderSettings();
+  renderMobileCards();
 }
+
+function isMobile() { return window.innerWidth <= 768; }
+
+function renderMobileCards() {
+  if (!isMobile()) return;
+
+  // Campaigns mobile cards
+  const campaignTb = document.getElementById('tb-campaigns');
+  if (campaignTb && DB.campaigns.length) {
+    let existingCards = campaignTb.parentElement.querySelector('.mobile-card-list');
+    if (existingCards) existingCards.remove();
+    const cardList = document.createElement('div');
+    cardList.className = 'mobile-card-list';
+    cardList.style.display = 'none';
+    cardList.innerHTML = DB.campaigns.map(c => {
+      const tpl = DB.templates.find(t => t.id === c.templateId);
+      return `<div class="mobile-card">
+        <div class="mc-header"><span class="mc-title">${c.name}</span><span class="badge badge-${c.status}">${c.status}</span></div>
+        <div class="mc-sub">Template: ${tpl ? tpl.name : '—'}</div>
+        <div class="mc-row"><span class="mc-label">Sent</span><span>${c.sent.toLocaleString()}</span></div>
+        <div class="mc-row"><span class="mc-label">Opens</span><span>${c.opens}</span></div>
+        <div class="mc-row"><span class="mc-label">Replies</span><span>${c.replies}</span></div>
+        <div class="mc-actions">${c.status !== 'completed' ? `<button class="btn btn-ghost btn-sm" onclick="toggleCampaignStatus(${c.id})">${c.status==='active'?'Pause':'Resume'}</button>` : ''}<button class="btn btn-ghost btn-sm" onclick="deleteItem('campaign',${c.id})" style="color:var(--red);">Delete</button></div>
+      </div>`;
+    }).join('');
+    campaignTb.parentElement.appendChild(cardList);
+  }
+
+  // Contacts mobile cards
+  const contactTb = document.getElementById('tb-contacts');
+  if (contactTb && DB.contacts.length) {
+    let existingCards = contactTb.parentElement.querySelector('.mobile-card-list');
+    if (existingCards) existingCards.remove();
+    const cardList = document.createElement('div');
+    cardList.className = 'mobile-card-list';
+    cardList.style.display = 'none';
+    cardList.innerHTML = DB.contacts.map(c => `<div class="mobile-card">
+      <div class="mc-header"><span class="mc-title">${c.name || 'No Name'}</span><span class="badge badge-${c.status === 'active' ? 'active' : c.status}">${c.status}</span></div>
+      <div class="mc-sub">${c.email}</div>
+      ${c.company ? `<div class="mc-row"><span class="mc-label">Company</span><span>${c.company}</span></div>` : ''}
+      <div class="mc-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('edit-contact',${c.id})">Edit</button><button class="btn btn-ghost btn-sm" onclick="deleteItem('contact',${c.id})" style="color:var(--red);">Delete</button></div>
+    </div>`).join('');
+    contactTb.parentElement.appendChild(cardList);
+  }
+}
+
+// Re-render mobile cards on resize
+window.addEventListener('resize', () => { renderMobileCards(); });
 
 function renderDashboard() {
   const totalSent = DB.campaigns.reduce((s, c) => s + c.sent, 0);
